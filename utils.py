@@ -3,6 +3,11 @@ from fastai.vision.all import *
 from nbdev.showdoc import *
 from ipywidgets import widgets
 from pandas.api.types import CategoricalDtype
+import requests
+import matplotlib.pyplot as plt
+from PIL import Image
+from io import BytesIO
+
 
 import matplotlib as mpl
 # mpl.rcParams['figure.dpi']= 200
@@ -29,8 +34,14 @@ from azure.cognitiveservices.search.imagesearch import ImageSearchClient as api
 from msrest.authentication import CognitiveServicesCredentials as auth
 
 def search_images_bing(key, term, min_sz=128):
-    client = api('https://api.cognitive.microsoft.com', auth(key))
-    return L(client.images.search(query=term, count=150, min_height=min_sz, min_width=min_sz).value)
+    search_url = "https://api.bing.microsoft.com/v7.0/images/search"
+    headers = {"Ocp-Apim-Subscription-Key" : key}
+    params  = {"q": term, "license": "public", "imageType": "photo"}
+    response = requests.get(search_url, headers=headers, params=params)
+    response.raise_for_status()
+    search_results = response.json()
+    thumbnail_urls = [img["thumbnailUrl"] for img in search_results["value"][:16]]
+    return thumbnail_urls
 
 
 # -
